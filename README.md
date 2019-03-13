@@ -1,4 +1,6 @@
-# CS50 Web ### Python, JavaScript, SQL
+# CS50 Web
+### Python, JavaScript, SQL
+
 ### Project 1
 
 #### Implementing a book review website.
