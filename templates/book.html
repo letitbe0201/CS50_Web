@@ -1,0 +1,104 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    {{ book["title"] }}
+{% endblock %}
+
+{% block main %}
+	
+	<h1 class="float-lg-left p-2 mb-4">{{ book["title"] }}</h1>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th scope="col">ISBN</th>
+				<th scope="col">Title</th>
+				<th scope="col">Author</th>
+				<th scope="col">Year</th>
+				<th scope="col">Number of Ratings</th>
+				<th scope="col">Average Rating</th>
+			</tr>
+		</thead>
+		<tbody>
+				<tr>
+					<td>{{ book["isbn"] }}</td>
+					<td>{{ book["title"] }}</td>
+					<td>{{ book["author"] }}</td>
+					<td>{{ book["year"] }}</td>
+					<td>{{ res.books[0]["work_ratings_count"] }}</td>
+					<td>{{ res.books[0]["average_rating"] }}</td>
+				</tr>
+		</tbody>
+	</table>
+
+	<h3 class="float-lg-left p-2 mb-2">Reviews</h3>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th scope="col">Username</th>
+				<th scope="col">Rating</th>
+				<th scope="col">Review</th>
+				<th scope="col">Date/Time</th>
+			</tr>
+		</thead>
+		<tbody>
+				<tr class="table-primary">
+					<td>You</td>
+					{% if mycomment["exist"] == 0 %}
+						<form action="/book/{{ book["isbn"] }}" method="post">
+							<td>
+								<div class="custom-control custom-radio">
+									<input type="radio" class="custom-control-input" id="star1" name="rating" value="1" required>
+									<label class="custom-control-label" for="star1">1</label>
+								</div>
+								<div class="custom-control custom-radio">
+									<input type="radio" class="custom-control-input" id="star2" name="rating" value="2" required>
+									<label class="custom-control-label" for="star2">2</label>
+								</div>
+								<div class="custom-control custom-radio">
+									<input type="radio" class="custom-control-input" id="star3" name="rating" value="3" required>
+									<label class="custom-control-label" for="star3">3</label>
+								</div>
+								<div class="custom-control custom-radio">
+									<input type="radio" class="custom-control-input" id="star4" name="rating" value="4" required>
+									<label class="custom-control-label" for="star4">4</label>
+								</div>
+								<div class="custom-control custom-radio">
+									<input type="radio" class="custom-control-input" id="star5" name="rating" value="5" required>
+									<label class="custom-control-label" for="star5">5</label>
+									<div class="invalid-feedback">Please rate the book!</div>
+								</div>
+							</td>
+							<td>
+								<div class="form-group">
+									<textarea class="form-control" id="review" name="review" rows="4" placeholder="Leave your review!"></textarea>
+								</div>
+							</td>
+							<td></td>
+							<td>
+								<button class="btn-sm btn-primary" type="submit">Submit</button>
+							</td>
+						</form>
+					{% else %}
+						<td>{{ mycomment["rating"] }}</td>
+						<td>{{ mycomment["review"] }}</td>
+						<td>{{ mycomment["datetime"] }}</td>
+					{% endif %}
+				</tr>
+				{% for review in reviews %}
+					{% if review["userid"] == userid and review["bookid"] == book["id"] %}
+					{% else %}
+						<tr>
+							<td>{{ review["username"] }}</td>
+							<td>{{ review["rating"] }}</td>
+							<td>{{ review["review"] }}</td>
+							<td>{{ review["datetime"] }}</td>
+						</tr>
+					{% endif %}
+				{% endfor %}
+		</tbody>
+	</table>
+
+
+{% endblock %}

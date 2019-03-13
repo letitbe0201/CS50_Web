@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Search
+{% endblock %}
+
+{% block main %}
+
+	<h3 class="text-left mb-3">Search: {{ search }}</h3>
+
+	{% if not results %}
+		<p>No result.</p>
+	{% else %}
+		<table class="table table-striped">
+			<thead class="thead-dark">
+				<tr>
+					<th scope="col"></th>
+					<th scope="col">ISBN</th>
+					<th scope="col">Title</th>
+					<th scope="col">Author</th>
+					<th scope="col">Year</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for result in results %}
+					<tr>
+						<th scope="row"><a class="btn-sm btn-primary" href="/book/{{ result["isbn"] }}" role="button">Link</a></th>
+						<td>{{ result["isbn"] }}</td>
+						<td>{{ result["title"] }}</td>
+						<td>{{ result["author"] }}</td>
+						<td>{{ result["year"] }}</td>
+					</tr>
+			    {% endfor %}
+	    	</tbody>
+	    </table>
+	{% endif %}
+
+{% endblock %}
