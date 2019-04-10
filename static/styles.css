@@ -1,0 +1,187 @@
+html, body
+{
+    height: 100%;
+}
+
+nav .navbar-brand
+{
+    /* size for brand */
+    font-size: 100px;
+    font-family: 'Shadows Into Light', cursive;
+    font-weight: bold;
+}
+
+
+main .form-control
+{
+    /* center form controls */
+
+    /* override Bootstrap's 100% width for form controls */
+    width: auto;
+}
+
+main
+{
+    /* scroll horizontally as needed */
+    overflow-x: auto;
+
+    /* center contents */
+    text-align: center;
+}
+
+main img
+{
+    /* constrain images on small screens */
+    max-width: 100%;
+}
+
+main table
+{
+    /* left-align contents */
+    text-align: left;
+}
+
+main tfoot
+{
+    /* boldface tables' footers */
+    font-weight: bold;
+}
+form {
+    font-family: 'Kanit', sans-serif;
+}
+
+.container {
+    max-width: 100%;
+    display: grid;
+    grid-template-columns: 30% 20% auto;
+    grid-template-rows: 75px auto 75px;
+    grid-template-areas:
+    "header header header"
+    "create channelList message"
+    "footer footer footer";
+}
+
+@media (min-width: 1200px)
+.container {
+
+}
+
+.header {
+    grid-area: header;
+
+    background-color: #d2d2d2;
+}
+
+.create {
+    grid-area: create;
+}
+
+.channelList {
+    grid-area: channelList;
+    font-size: 1.5rem;
+    font-family: 'Kanit', sans-serif;
+    word-wrap: break-word;
+}
+.channelList label {
+    font-size: 1rem;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+.channelList img {
+    max-height: 3rem;
+    float: left;
+}
+
+.message {
+    grid-area: message;
+    height: 80%;
+    overflow-y: auto;
+    max-height: 66.5vh;
+    font-family: 'Kanit', sans-serif;
+    word-wrap: break-word;
+    border-radius: 6px;
+}
+
+.footer {
+    grid-area: footer;
+    text-align: right;
+    font-family: 'Kanit', sans-serif;
+    max-height: 8.8vh;
+}
+
+.message_sent {
+    grid-area: message;
+    align-self: end;
+    height: 20%;
+    max-height: 17vh;
+}
+
+.message_box {
+    padding:1rem!important;
+}
+/*
+.user_display {
+    max-height: 25.5vh;
+}
+#new_username {
+    max-height: 10.5vh;
+}
+#new_channel {
+    max-height: 10.5vh;
+}
+*/
+.user_display button {
+    font-family: 'Kanit', sans-serif;
+}
+#displayName {
+    font-size: 3rem;
+    font-family: 'Kanit', sans-serif;
+    word-wrap: break-word;
+}
+
+#channels {
+    overflow-y: auto;
+    max-height: 74.5vh;
+}
+.tab-pane img{
+    max-height: 2rem;
+}
+
+/*
+    Channel list onclick display
+*/
+.list-group-item.active {
+    z-index: 2;
+    color: #fff;
+    background-color: #003106;
+    border-color: #7fad00;
+}
+.list-group-item {
+    padding: .64rem 1.25rem;
+    border-left: none;
+    border-right: none;
+    border-radius: 6px;
+}
+
+/*
+ *  Scroll bars
+ */
+.scrollable::-webkit-scrollbar-track
+{
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    border-radius: 6px;
+    background-color: #F5F5F5;
+}
+
+.scrollable::-webkit-scrollbar
+{
+    width: 16px;
+    background-color: #F5F5F5;
+}
+
+.scrollable::-webkit-scrollbar-thumb
+{
+    border-radius: 6px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #003106;
+}

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- documentation at http://getbootstrap.com/docs/4.1/, alternative themes at https://bootswatch.com/ -->
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Shadows+Into+Light" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Kanit" rel="stylesheet">
+        <link href="/static/styles.css" rel="stylesheet">
+
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+
+        <!-- Configure the profile picture using jinja2 if the / route passing a filename -->
+        {% if filename != '' %}
+            <script>
+                //console.log(localStorage.getItem('profile_picture'));
+                localStorage.setItem('profile_picture', '{{ filename }}');
+                //console.log(localStorage.getItem('profile_picture'));
+                document.addEventListener('DOMContentLoaded', () => {
+                    let profile_picture = document.querySelector('#profile_picture');
+                    profile_picture.setAttribute("src", "/static/user_profilepics/" + localStorage.getItem('profile_picture'));
+                    //console.log(profile_picture);                    
+                });
+            </script>
+        {% endif %}
+
+        <script>
+
+            document.addEventListener('DOMContentLoaded', () => {
+
+                // Set initial name to empty string
+                if (!localStorage.getItem('username'))
+                    localStorage.setItem('username', '');
+                else {
+                    // else display the username
+                    document.querySelector('#displayName').innerHTML = localStorage.getItem('username');
+                    // Alter the button display after the user submit a username
+                    document.querySelector('#username_button').innerHTML = 'Change username';
+                };
+
+                // Initilize profile picture
+                if (!localStorage.getItem('profile_picture')) {
+                    localStorage.setItem('profile_picture', 'blank_profile_picture.png');
+                }
+                else {
+                    let profile_picture = document.querySelector('#profile_picture');
+                    profile_picture.setAttribute("src", "/static/user_profilepics/" + localStorage.getItem('profile_picture'));
+                };
+
+
+                // If the channel visited previously by the user somehow disappear clear the local storage and return false
+                if (document.querySelector('#list_channel_' + CSS.escape(localStorage.getItem('current_channel'))) == null || document.querySelector('#channel_' + CSS.escape(localStorage.getItem('current_channel'))) == null) {
+                    localStorage.setItem('current_channel', '');            
+                };
+
+                // Set up the current channel (showing the channel the user was previously on after closing browser)
+                if (localStorage.getItem('current_channel') != '') {
+                    var e = document.querySelector('#list_channel_' + CSS.escape(localStorage.getItem('current_channel')));
+                    var tab = document.querySelector('#channel_' + CSS.escape(localStorage.getItem('current_channel')));
+
+
+                    e.setAttribute("class", "list-group-item list-group-item-action active show");
+                    e.setAttribute("aria-selected", "true");
+                    tab.setAttribute("class", "tab-pane p-3 fade active show");
+                };
+
+                // Changing the local storage of channel after clicking the buttons (visit other channel)
+                document.querySelectorAll('.list-group-item.list-group-item-action').forEach(a => {
+                    a.onclick = () => {
+                        localStorage.setItem('current_channel', a.id.slice(13));
+                    };
+                });
+
+
+                // when the user submit the username
+                document.querySelector('#new_username').onsubmit = () => {
+
+                    // Alert the user if type in nothing
+                    if (!document.querySelector('#username').value) {
+                        alert('Please enter your username!');
+                        return false;
+                    }
+                    // Ensure the length of username won't be too long
+                    else if (document.querySelector('#username').value.length > 24) {
+                        alert('Your username shouldn\'t be longer than 24 words!');
+                        return false;
+                    }
+                    else {
+                        let username = document.querySelector('#username').value;
+                        // store the username into the localStorage
+                        document.querySelector('#displayName').innerHTML = username;
+                        localStorage.setItem('username', username);
+                        // Clear the form after submission
+                        document.querySelector('#username').value = '';
+
+                        return false;
+                    }
+
+                };
+
+
+                // Socket for controling the channels, message and profile pictures
+                // Connect to websocket
+                var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port); 
+                // When connected, configure button
+                socket.on('connect', () => {
+
+                    // Submit new channel when the create button is clicked
+                    document.querySelector('#new_channel').onsubmit = () => {
+                        // Ensure the user has a username
+                        if (!localStorage.getItem('username')) {
+                            alert('Please give us a username first!');
+                            return false;
+                        };
+
+                        // Ensure the user type in a channel name
+                        if (!document.querySelector('#channel').value) {
+                            alert('Please enter a channel name!');
+                            return false;
+                        }
+                        else if (document.querySelector('#channel').value.length > 24) {
+                            alert('Your channel name shouldn\'t be longer than 24 words!');
+                            return false;
+                        };
+
+                        const newChannel = document.querySelector('#channel').value;
+                        const owner = localStorage.getItem('username');
+                        const profile_picture = localStorage.getItem('profile_picture');
+
+                        // Ensure the channel name is not used
+                        // Use CSS.escape to ensure the value is properly encoded for use in a css expression
+                        if (document.querySelector("a[aria-controls = " + CSS.escape(newChannel) + "]") != null) {
+                            alert('The channel name has been used!');
+                            return false;
+                        };
+
+                        socket.emit('submit new channel', {'channel': newChannel, 'owner': owner, 'profile_picture': profile_picture});
+
+                        return false;
+                    };
+
+
+                    // Send message when the send button is clicked
+                    document.querySelector('#message_sent').onsubmit = () => {
+                        // Ensure the user has a username
+                        if (!localStorage.getItem('username')) {
+                            alert('Please give us a username first!');
+                            return false;
+                        };
+
+                        // Ensure the user type in some words
+                        if (!document.querySelector('#new_message').value) {
+                            return false;
+                        };
+
+                        // Ensure the user select a channel
+                        if (document.querySelector('a.list-group-item.active.show') == null) {
+                            alert('Choose a channel or create a channel!');
+                            return false;
+                        };
+
+                        const current_channel = document.getElementsByClassName("list-group-item active show")[0].id;
+
+                        const message = document.querySelector('#new_message').value;
+                        const msg_sent_by = localStorage.getItem('username');
+                        const profile_picture = localStorage.getItem('profile_picture');
+                        let timestamp = new Date();
+                        const msg_time = timestamp.getFullYear() + '/' + (timestamp.getMonth() + 1) + '/' + timestamp.getDate() + ' ' + timestamp.getHours() + ':' + timestamp.getMinutes() + ':' + timestamp.getSeconds();
+                        socket.emit('submit new message', {'message': message, 'msg_sent_by': msg_sent_by, 'profile_picture': profile_picture,'current_channel': current_channel, 'msg_time': msg_time});
+
+                        // Clear the form after submission
+                        document.querySelector('#new_message').value = '';
+
+                        return false;
+                    };
+
+                    // Configure the profile picture when submit button is pressed
+                    document.querySelector('#submit_profilepic').onsubmit = () => {
+                        // Ensure the user choose a file
+                        if (document.querySelector('#upload_profilepic').files.length != 1) {
+                            alert('Choose a picture!');
+                            return false;
+                        };
+                        // Ensure the user has a username
+                        if (!localStorage.getItem('username')) {
+                            alert('Please give us a username first!');
+                            return false;
+                        };
+                    };
+                });
+
+                // When a new channel is announced, add to the list of channels
+                socket.on('announce channel', data => {
+                    // Get the data from the server
+                    const owner = `${data.owner}`;
+                    const channel_id = `${data.id}`;
+                    const newChannel = `${data.channel}`;
+                    const profile_picture = `${data.profile_picture}`;
+                    // Set up name of the channel
+                    const p = document.createElement('p');
+                    p.setAttribute("class", "mb-1");
+                    p.innerHTML = newChannel;
+                    // Set up owner name of channel
+                    const label = document.createElement('label');
+                    label.innerHTML = "by " + owner;
+                    label.setAttribute("class", "float-right mt-2");
+                    // Set up the profile pic display on channel list
+                    const img = document.createElement('img');
+                    img.setAttribute("src", "/static/user_profilepics/" + profile_picture);
+                    img.setAttribute("class", "rounded mr-2");
+                    img.setAttribute("alt", "Profile picture")
+                    // Configure the button of new channel
+                    const a = document.createElement('a');
+                    a.setAttribute("class", "list-group-item list-group-item-action");
+                    a.setAttribute("id", "list_channel_" + channel_id);
+                    a.setAttribute("data-toggle", "list");
+                    a.setAttribute("href", "#channel_" + channel_id);
+                    a.setAttribute("role", "tab");
+                    a.setAttribute("aria-controls", newChannel);
+                    document.querySelector('#channels').append(a);
+                    document.querySelector('#list_channel_' + channel_id).append(p);
+                    document.querySelector('#list_channel_' + channel_id).append(img);
+                    document.querySelector('#list_channel_' + channel_id).append(label);
+                    // Configure the content of the new channel
+                    const div = document.createElement('div');
+                    //div.innerHTML = `${data.channel}`;
+                    div.setAttribute("class", "tab-pane p-3 fade");
+                    div.setAttribute("id", "channel_" + channel_id);
+                    div.setAttribute("role", "tabpanel");
+                    div.setAttribute("aria-lebelledby", "list_channel_" + channel_id)
+                    document.querySelector('#nav-tabContent').append(div);
+                });
+
+                // When recieving new message
+                socket.on('announce message', data => {
+                    // Configure new message
+                    const msg_overflow = `${data.msg_overflow}`;
+                    const profile_picture = `${data.profile_picture}`;
+                    const new_message = `${data.message}`;
+                    const sent_by = `${data.msg_sent_by}`;
+                    const msg_time = `${data.msg_time}`;
+                    const currentChannel = 'channel_' + `${data.current_channel}`;
+
+                    const div = document.createElement('div');
+
+                    // remove the first message if the storage reaches the limit
+                    if (msg_overflow == 1) {
+                        document.querySelector("div.tab-pane.active.show div").remove();
+                    };
+
+                    ////////////////// Configure the message
+                    div.innerHTML = "<img src='/static/user_profilepics/" + profile_picture + "' id='msg_picture' class='rounded mr-2' alt='message picture'>" + sent_by + ": " + new_message + "<br\/><span class='float-right'>" + msg_time + "</span>";
+                    div.setAttribute("class", "mb-3");
+                    document.querySelector('#' + currentChannel).append(div);
+
+                    // Scroll to the bottom of while a new message is sent
+                    let messageBody = document.querySelector('#message_box');
+                    messageBody.scrollTop = messageBody.scrollHeight - messageBody.clientHeight;
+
+                });
+
+                // Let the channel owner active the channel when created
+                socket.on('channel owner', data => {
+                    const owner = `${data.owner}`;
+                    const channelId = `${data.id}`;
+                    const newChannel = `${data.channel}`;
+                    // If there is a active channel, turn it off
+                    var e = document.querySelector('a.list-group-item.active.show');
+                    var tab = document.querySelector('div.tab-pane.fade.active.show');
+                    if (e) {
+                        e.setAttribute("class", "list-group-item list-group-item-action");
+                        e.setAttribute("aria-selected", "false");
+                        tab.setAttribute("class", "tab-pane fade");
+                    };
+                    // Active the new created channel
+                    document.querySelector('#list_channel_' + CSS.escape(channelId)).setAttribute("class", "list-group-item list-group-item-action active show");
+                    document.querySelector('#list_channel_' + CSS.escape(channelId)).setAttribute("aria-selected", "true");
+                    document.querySelector('#channel_' + CSS.escape(channelId)).setAttribute("class", "tab-pane fade active show");
+
+                    // Clear the form after submission
+                    document.querySelector('#channel').value = '';
+
+                    // Set up current channel
+                    localStorage.setItem('current_channel', channelId);
+
+                    // Scroll to the bottom of while a new message is sent
+                    let messageBody = document.querySelector('#channels');
+                    messageBody.scrollTop = messageBody.scrollHeight - messageBody.clientHeight;
+                });
+
+            });
+
+        </script>
+
+        <title>Project2: CHAT!</title>
+
+	</head>
+
+
+	<body class="container w-100 mx-0 px-0">
+
+        <nav class="header navbar navbar-expand-md navbar-light border">
+            <a class="navbar-brand" href="/"><span>CHAT</span></a>
+        </nav>
+
+        <div class="create p-4">
+            <div class="user_display">
+                <img src="/static/user_profilepics/blank_profile_picture.png" id="profile_picture" class="rounded w-50" alt="Profile Picture">
+                <form method="post" enctype="multipart/form-data" id="submit_profilepic">
+                    <input type="file" id="upload_profilepic" name="file" class="mt-2">
+                    <button id="profilepic_button" class="btn mt-3" type="submit" value="Upload">Submit Profile Picture</button>
+                </form>
+                <p class="mt-0">
+                    <span id="displayName"></span>
+                </p>
+            </div>
+            <form id="new_username">
+                <div class="form-group">
+                    <input autocomplete="off" autofocus id="username" class="form-control w-100" name="username" placeholder="Username" type="text">
+                </div>
+                <button class="btn" type="submit" id="username_button">Submit</button>
+            </form>
+
+            <form id="new_channel" class="mt-4">
+                <div class="form-group">
+                    <input autocomplete="off" id="channel" class="form-control w-100" name="channel" placeholder="Create a new channel" type="text">
+                </div>
+                <button id="create_channel_btn" class="btn" type="submit">Create</button>
+            </form>
+        </div>
+
+        <div class="channelList p-1 mt-3" id="channelList">
+            <div class="channelList_title text-center">
+                <h3>Channel List</h3>
+            </div>
+            <div class="list-group scrollable pr-2" id="channels" role="tablist">
+                {% for channel in channels %}
+                    <a class="list-group-item list-group-item-action" id="list_channel_{{ channel["id"] }}" data-toggle="list" href="#channel_{{ channel["id"] }}" role="tab" aria-controls="{{ channel["name"] }}">
+                        <p class="mb-1">{{ channel["name"] }}</p>
+                        <img src="/static/user_profilepics/{{ channel["profile_picture"] }}" class="rounded mr-2" alt="Profile picture">
+                        <label class="float-right mt-2">by {{ channel["owner"] }}</label>
+                    </a>
+                {% endfor %}               
+            </div>
+        </div>
+
+        <div class="message border scrollable m-4" id="message_box">
+            <div class="tab-content message_box" id="nav-tabContent">
+                {% for channel in channels %}
+                    <div class="tab-pane p-3 fade" id="channel_{{ channel["id"] }}" role="tabpanel" aria-labelledby="list_channel_{{ channel["id"] }}">
+                        {% for message in channel["chat_history"] %}
+                            <div class="mb-3">
+                                <img src="/static/user_profilepics/{{ message['profile_picture'] }}" id="msg_picture" class="rounded mr-2" alt="message picture">{{ message["msg_sent_by"] }}: {{ message["message"] }}
+                                    <br/><span class="float-right">{{ message["msg_time"] }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <form id="message_sent" class="message_sent p-4">
+            <div class="form-group mb-0 mt-3">
+                <input autocomplete="off" id="new_message" class="form-control w-100 mb-3" name="new_message" placeholder="Text here!" type="text">
+                <button class="btn" type="submit">Send</button>
+            </div>
+        </form>
+
+        <footer class="footer p-4">Design by Yida</footer>
+
+	</body>
+
+</html>
