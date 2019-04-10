@@ -20,6 +20,8 @@
 * _application.py_ Using FLASK and Socket.IO to control the new channel, new message and handling the post request of file(profile picture) upload from the url '/'.
 * _index.html_ Configure the username, profile picture, channels and the message box display on the browser with Javascript && Socket.IO.
 
+![Screenshot of the application](https://github.com/letitbe0201/CS50_Web/blob/cs50/web/2018/x/projects/2/Screenshot.jpg)
+
 [Link to project overview from CS50](https://docs.cs50.net/web/2018/x/projects/2/project2.html)
 
 Yida Chung
